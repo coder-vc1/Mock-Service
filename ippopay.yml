@@ -1,0 +1,1105 @@
+openapi: 3.0.3
+info:
+  title: Check Partner APIs
+  version: 1.0.0
+  description: >+
+    Node 18 based Express server. Here we have handled unit tests. We have also
+    implemented Commitizen, Eslint, Prettier, Husky and Mocha. 
+
+     - `prettier` - For formatting the code. 
+
+     - `commitizen` - For uniforming the commits. 
+
+     - `eslint` - For uniforming the code style. 
+
+     - `husky` - For checking the lint errors and prevent the difference in code writing style. 
+
+     - `mocha`- For testing the code 
+
+  contact:
+    name: IppoPay
+    email: support@ippopay.com
+  license:
+    name: Appache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+servers:
+  - url: https://ippouat.ippopay.com/api/v1/ippo-partner
+    description: Staging Server
+tags:
+  - name: Merchant
+    description: Merchant Related Routes
+  - name: Store
+    description: Store Related Routes
+  - name: KYC
+    description: KYC and Business Proof Validation Routes
+  - name: VPA
+    description: VPA Related Routes
+  - name: Transaction
+    description: Transaction Related Routes
+paths:
+  /merchant/create:
+    post:
+      tags:
+        - Merchant
+      summary: To create Merchant
+      requestBody:
+        description: >-
+          Legal name (Legal Name of the Business or Merchant), brand name (Display
+          name of the Business), merchant type, location, and mobile number are
+          mandatory. Email is optional.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/merchant_create"
+      x-microcks-operation:
+        delay: 100
+        dispatcher: SCRIPT
+        dispatcherRules: |
+          return "check"
+
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              examples:
+                check:
+                  value: |
+                    {
+                      "success": true,
+                      "message": "Merchant created successfully",
+                      "data": {
+                          "merchant_id": "{{request.body/data/merchant_id}}",
+                          "legal_name": "{{request.body/data/legal_name}}",
+                          "brand_name": "{{request.body/data/brand_name}}",
+                          "mobile_number": "{{request.body/data/mobile_number}}"
+                        }
+                    }
+        "400":
+          description: ""
+          content:
+            application/json:
+              examples:
+                bad_request:
+                  value: |
+                    {
+                      "success": false,
+                      "message": "Bad Request"
+                    }
+
+  /vpa/create:
+    post:
+      tags:
+        - VPA
+      summary: >-
+        To create VPA. Penny Drop Verification is done here. KYC should be
+        completed before creating VPA.
+      requestBody:
+        description: >-
+          Merchant ID, Store ID, VPA Name (For Display Purpose), VPA (VPA ID),
+          Account Number, Account Holder Name and IFSC are mandatory.
+      x-microcks-operation:
+        delay: 100
+        dispatcher: SCRIPT
+        dispatcherRules: |
+          return "check"
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/vpa_create"
+        required: true
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              examples:
+                check:
+                  value: |
+                    {
+                      "success": true,
+                      "message": "VPA created successfully",
+                      {
+                          {
+                            "data": {
+                              "brand_name": "{{request.body/data/brand_name}}",
+                              "mobile_number": "{{request.body/data/mobile_number}}",
+                              "bank": {
+                                "account_number": "{{request.body/data/bank/account_number}}",
+                                "ifsc": "{{request.body/data/bank/ifsc}}",
+                                "beneficiary_name": "{{request.body/data/bank/beneficiary_name}}"
+                              }
+                            }
+                          }
+
+                      }
+
+                    }
+        "400":
+          description: ""
+          content:
+            application/json:
+              examples:
+                bad_request:
+                  value: |
+                    {
+                      "success": false,
+                      "message": "Bad Request"
+                    }
+  /vpa/update/JNFG08NgFLKg:
+    post:
+      tags:
+        - VPA
+      summary: To update bank account number for the VPA
+      requestBody:
+        description: >-
+          VPA ID, Store ID, Account Number, IFSC Code, and Account Holder Name
+          are mandatory.
+      x-microcks-operation:
+        delay: 100
+        dispatcher: SCRIPT
+        dispatcherRules: |
+          return "check"
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/vpa_update"
+        required: true
+      parameters:
+        - name: merchantId
+          in: path
+          description: ID of merchant to update VPA
+          required: true
+          schema:
+            type: string
+          example: sBLC9KuBvv
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              examples:
+                check:
+                  value: |
+                    {
+                      "success": true,
+                      "message": "Account number updated successfully",
+                        "data": {
+                          "vpa_name": "{{request.body/vpa_name}}",
+                          "vpa": "{{request.body/vpa}}",
+                          "bank": {
+                            "account_number": "{{request.body/bank/account_number}}",
+                            "ifsc": "{{request.body/bank/ifsc}}",
+                            "beneficiary_name": "{{request.body/bank/beneficiary_name}}"
+                          }
+                        }
+                    }
+        "400":
+          description: ""
+          content:
+            application/json:
+              examples:
+                bad_request:
+                  value: |
+                    {
+                      "success": false,
+                      "message": "Bad Request"
+                    }
+  /store/create/JNFG08NgFLKg:
+    post:
+      tags:
+        - Store
+      summary: To create Store
+      parameters:
+        - name: merchantId
+          in: path
+          description: ID of merchant to create Store
+          required: true
+          schema:
+            type: string
+          example: sBLC9KuBvv
+      requestBody:
+        description: >-
+          Store name, MCC, are mandatory. If the merchant and store has the same
+          address, is_same_merchant_address has to be checked (i.e) true. If it
+          is not checked, the location is mandatory.
+      x-microcks-operation:
+        delay: 100
+        dispatcher: SCRIPT
+        dispatcherRules: |
+          return "check"
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/store_create"
+        required: true
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              examples:
+                check:
+                  value: |
+                    {
+                      "success": true,
+                      "message": "Store Created Successfully!",
+                        "data": {
+                          "merchant_id": "{{request.body/merchant_id}}",
+                          "store_id": "{{request.body/store_id}}",
+                          "legal_name": "{{request.body/legal_name}}",
+                          "brand_name": "{{request.body/brand_name}}",
+                          "store_name": "{{request.body/store_name}}"
+                        }
+                    }
+        "400":
+          description: ""
+          content:
+            application/json:
+              examples:
+                bad_request:
+                  value: |
+                    {
+                      "success": false,
+                      "message": "Bad Request"
+                    }
+  /transaction/list/JNFG08NgFLKg:
+    get:
+      tags:
+        - Transaction
+      summary: To list transactions of the merchant
+      parameters:
+        - name: merchantId
+          in: path
+          description: ID of merchant to list transaction
+          required: true
+          schema:
+            type: string
+          example: sBLC9KuBvv
+        - name: limit
+          in: query
+          description: For pagination purpose
+          schema:
+            type: string
+          example: "2"
+        - name: page
+          in: query
+          description: For pagination purpose
+          schema:
+            type: string
+          example: "2"
+        - name: mode
+          in: query
+          description: Payment mode. Should have values upi, cash
+          schema:
+            type: string
+          example: upi
+        - name: from_time
+          in: query
+          description: >-
+            To list the transaction from this date. NOTE: At present, the system
+            allows access to transaction records within a maximum range of only
+            31 days from any date. The date format is YYYY-MM-DD.
+          schema:
+            type: string
+          example: "2023-04-06"
+        - name: to_time
+          in: query
+          description: >-
+            To list the transaction till this date. NOTE: At present, the system
+            allows access to transaction records within a maximum range of only
+            31 days. The date format is YYYY-MM-DD.
+          schema:
+            type: string
+          example: "2023-05-04"
+        - name: date_option
+          in: query
+          description: Date option includes 'today', 'yesterday', 'weekly', 'monthly'
+          schema:
+            type: string
+          example: today
+        - name: status
+          in: query
+          description: >-
+            To list transactions based on the status of the transaction. Should
+            have values 'success', 'pending', 'failure'.
+          schema:
+            type: string
+          example: success
+      x-microcks-operation:
+        delay: 100
+        dispatcher: SCRIPT
+        dispatcherRules: |
+          return "check"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              examples:
+                check:
+                  value: |
+                    {
+                      "success": true,
+                      "message": "Transaction lists are",
+                        "data": {
+                            "sales_by_mode": {
+                              "cash": {
+                                "total": "{{request.body/data/sales_by_mode/cash/total}}",
+                                "count": "{{request.body/data/sales_by_mode/cash/count}}"
+                              },
+                              "card": {
+                                "total": "{{request.body/data/sales_by_mode/card/total}}",
+                                "count": "{{request.body/data/sales_by_mode/card/count}}"
+                              },
+                              "upi": {
+                                "total": "{{request.body/data/sales_by_mode/upi/total}}",
+                                "count": "{{request.body/data/sales_by_mode/upi/count}}"
+                              }
+                            },
+                            "total_sales": [
+                              {
+                                "total": "{{request.body/data/total_sales/0/total}}",
+                                "count": "{{request.body/data/total_sales/0/count}}"
+                              }
+                            ],
+                            "transaction_details": [
+                              {
+                                "merchant_id": "{{request.body/data/transaction_details/0/merchant_id}}",
+                                "store_id": "{{request.body/data/transaction_details/0/store_id}}",
+                                "transaction_id": "{{request.body/data/transaction_details/0/transaction_id}}",
+                                "amount": "{{request.body/data/transaction_details/0/amount}}",
+                                "mode": "{{request.body/data/transaction_details/0/mode}}",
+                                "transaction_status": "{{request.body/data/transaction_details/0/transaction_status}}",
+                                "transaction_date": "{{request.body/data/transaction_details/0/transaction_date}}"
+                              },
+                              {
+                                "merchant_id": "{{request.body/data/transaction_details/1/merchant_id}}",
+                                "store_id": "{{request.body/data/transaction_details/1/store_id}}",
+                                "transaction_id": "{{request.body/data/transaction_details/1/transaction_id}}",
+                                "amount": "{{request.body/data/transaction_details/1/amount}}",
+                                "mode": "{{request.body/data/transaction_details/1/mode}}",
+                                "transaction_status": "{{request.body/data/transaction_details/1/transaction_status}}",
+                                "transaction_date": "{{request.body/data/transaction_details/1/transaction_date}}"
+                              }
+                            ]
+                          }
+                    }
+        "400":
+          description: ""
+          content:
+            application/json:
+              examples:
+                bad_request:
+                  value: |
+                    {
+                      "success": false,
+                      "message": "Bad Request"
+                    }
+  /transaction/details/JNFG08NgFLKg/4833812123:
+    get:
+      tags:
+        - Transaction
+      summary: To view the details of a transaction of the merchant
+      parameters:
+        - name: merchantId
+          in: path
+          description: ID of merchant to view transaction
+          required: true
+          schema:
+            type: string
+          example: sBLC9KuBvv
+        - name: transactionId
+          in: path
+          description: ID of transaction to view transaction
+          required: true
+          schema:
+            type: string
+          example: hjgfdhsd
+      x-microcks-operation:
+        delay: 100
+        dispatcher: SCRIPT
+        dispatcherRules: |
+          return "check"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              examples:
+                check:
+                  value: |
+                    {
+                      "success": true,
+                      "message": "Transaction Details",
+                      "data": {
+                      "merchant_id": "{{request.body/data/merchant_id}}",
+                      "store_id": "{{request.body/data/store_id}}",
+                      "transaction_id": "{{request.body/data/transaction_id}}",
+                      "amount": {{request.body/data/amount}},
+                      "mode": "{{request.body/data/mode}}",
+                      "transaction_status": "{{request.body/data/transaction_status}}",
+                      "details": {
+                        "type": "{{request.body/data/details/type}}",
+                        "amount": "{{request.body/data/details/amount}}",
+                        "status": "{{request.body/data/details/status}}",
+                        "payer_vpa": "{{request.body/data/details/payer_vpa}}",
+                        "payee_vpa": "{{request.body/data/details/payee_vpa}}",
+                        "app": "{{request.body/data/details/app}}"
+                      }
+                    }
+                    }
+        "400":
+          description: ""
+          content:
+            application/json:
+              examples:
+                bad_request:
+                  value: |
+                    {
+                      "success": false,
+                      "message": "Bad Request"
+                    }
+  /kyc-validate/address-proof/aadhaar/JNFG08NgFLKg:
+    post:
+      tags:
+        - hidden
+      summary: To request OTP for Aadhaar Verification
+      parameters:
+        - name: merchantId
+          in: path
+          description: ID of merchant to submit documents
+          required: true
+          schema:
+            type: string
+          example: sBLC9KuBvv
+      requestBody:
+        description: Aadhaar number and Document type is mandatory.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/aadhar_request_otp"
+        required: true
+      x-microcks-operation:
+        delay: 100
+        dispatcher: SCRIPT
+        dispatcherRules: |
+          return "check"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              examples:
+                check:
+                  value: |
+                    {
+                      "success": true,
+                      "message": "Aadhaar verification started. OTP sent your registered mobile number is valid for another 10 minutes.",
+                        "data": {
+                            "aadhaar_number": "{{request.body/data/aadhaar_number}}",
+                            "transaction_id": "{{request.body/data/transaction_id}}"
+                          }
+                    }
+        "400":
+          description: ""
+          content:
+            application/json:
+              examples:
+                bad_request:
+                  value: |
+                    {
+                      "success": false,
+                      "message": "Bad Request"
+                    }
+  /kyc-validate/aadhaar-otp-validate/JNFG08NgFLKg:
+    post:
+      tags:
+        - hidden
+      summary: To verify the One Time Password for Aadhar
+      parameters:
+        - name: merchantId
+          in: path
+          description: ID of merchant to submit documents
+          required: true
+          schema:
+            type: string
+          example: sBLC9KuBvv
+      requestBody:
+        description: >-
+          Transaction ID is mandatory which is from response of the request otp
+          route. OTP and Aadhaar Number is mandatory.
+      x-microcks-operation:
+        delay: 100
+        dispatcher: SCRIPT
+        dispatcherRules: |
+          return "check"
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/otp_verification"
+        required: true
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              examples:
+                check:
+                  value: |
+                    {
+                      "success": true,
+                      "message": "Aadhaar data retrieved successfully.",
+                      "data": {
+                        "aadhaar_number": "{{request.body/data/aadhaar_number}}",
+                        "name": "{{request.body/data/name}}"
+                      }
+                    }
+        "400":
+          description: ""
+          content:
+            application/json:
+              examples:
+                bad_request:
+                  value: |
+                    {
+                      "success": false,
+                      "message": "Bad Request"
+                    }
+  /kyc-validate/address-proofs/JNFG08NgFLKg:
+    post:
+      tags:
+        - KYC
+      summary: >-
+        To validate and submit other address proofs like passport, driver's
+        license, and voter ID
+      parameters:
+        - name: merchantId
+          in: path
+          description: ID of merchant to submit documents
+          required: true
+          schema:
+            type: string
+          example: sBLC9KuBvv
+      requestBody:
+        description: >-
+          Document Types should be license, voterId, or passport. If License is
+          the given proof, please include date of birth. And if the selected
+          document is passport, name and date of birth should be sent.
+          Images/PDFs should be uploaded.
+      x-microcks-operation:
+        delay: 100
+        dispatcher: SCRIPT
+        dispatcherRules: |
+          return "check"
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/voter_id"
+        required: true
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              examples:
+                check:
+                  value: |
+                    {
+                      "success": true,
+                      "message": "*** Submitted Successfully!",
+                        "data": {
+                          "***": "{{request.body/data/***}}",
+                          "name": "{{request.body/data/name}}"
+                        }
+                    }
+        "400":
+          description: ""
+          content:
+            application/json:
+              examples:
+                bad_request:
+                  value: |
+                    {
+                      "success": false,
+                      "message": "Bad Request"
+                    }
+  /kyc-validate/pan/JNFG08NgFLKg:
+    post:
+      tags:
+        - KYC
+      summary: To validate and submit PAN card.
+      parameters:
+        - name: merchantId
+          in: path
+          description: ID of merchant to submit documents
+          required: true
+          schema:
+            type: string
+          example: sBLC9KuBvv
+      requestBody:
+        description: PAN number, document type, and Image/PDF to be uploaded.
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/pan"
+      x-microcks-operation:
+        delay: 100
+        dispatcher: SCRIPT
+        dispatcherRules: |
+          return "check"
+        required: true
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              examples:
+                check:
+                  value: |
+                    {
+                      "success": true,
+                      "message": "Pan Submitted Successfully!",
+                      "data": {
+                        "pan_number": "{{request.body/data/pan_number}}",
+                        "name": "{{request.body/data/name}}"
+                      }
+                    }
+        "400":
+          description: ""
+          content:
+            application/json:
+              examples:
+                bad_request:
+                  value: |
+                    {
+                      "success": false,
+                      "message": "Bad Request"
+                    }
+  /kyc-validate/business-proof/JNFG08NgFLKg:
+    post:
+      tags:
+        - KYC
+      summary: To submit business proofs
+      parameters:
+        - name: merchantId
+          in: path
+          description: ID of merchant to submit documents
+          required: true
+          schema:
+            type: string
+          example: sBLC9KuBvv
+      requestBody:
+        description: >-
+          Document Number, Document Type (From the list), and PDFs/Images should
+          be uploaded.
+      x-microcks-operation:
+        delay: 100
+        dispatcher: SCRIPT
+        dispatcherRules: |
+          return "check"
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/business_proof"
+        required: true
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              examples:
+                check:
+                  value: |
+                    {
+                      "success": true,
+                      "message": "Documents Submitted Successfully!",
+                        "data": {
+                          "document_type": "List of partners of LLP with name, date of birth and address. List to match with MCA website",
+                          "document_no": "{{request.body/data/document_no}}"
+                        }
+                    }
+        "400":
+          description: ""
+          content:
+            application/json:
+              examples:
+                bad_request:
+                  value: |
+                    {
+                      "success": false,
+                      "message": "Bad Request"
+                    }
+  /kyc-validate/aadhaar/JNFG08NgFLKg:
+    post:
+      tags:
+        - KYC
+      summary: To submit aadhaar details
+      parameters:
+        - name: merchantId
+          in: path
+          description: ID of merchant to submit aadhaar details
+          required: true
+          schema:
+            type: string
+          example: sBLC9KuBvv
+      requestBody:
+        description: ""
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/aadhaar_details"
+      x-microcks-operation:
+        delay: 100
+        dispatcher: SCRIPT
+        dispatcherRules: |
+          return "check"
+        required: true
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              examples:
+                check:
+                  value: |
+                    {
+                      "success": true,
+                      "message": "Aadhaar Submitted Successfully!",
+                      "data": {
+                        "aadhaar_number": "{{request.body/data/aadhaar_number}}",
+                        "name": "{{request.body/data/name}}"
+                      }
+                    }
+        "400":
+          description: ""
+          content:
+            application/json:
+              examples:
+                bad_request:
+                  value: |
+                    {
+                      "success": false,
+                      "message": "Bad Request"
+                    }
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+  schemas:
+    merchant_create:
+      required:
+        - legal_name
+        - brand_name
+        - mobile_number
+        - merchant_type
+        - location
+      type: object
+      properties:
+        legal_name:
+          type: string
+          example: Momo Foods Pvt Ltd
+        brand_name:
+          type: string
+          example: Wow! Momo
+        mobile_number:
+          type: string
+          example: "9988776767"
+        email:
+          type: string
+          example: info@wowmomo.com
+        merchant_type:
+          type: string
+          example: partnership
+        location:
+          type: object
+          required:
+            - address
+            - area
+            - city
+            - state
+            - pin_code
+            - latlong
+          properties:
+            address:
+              type: string
+              example: Balaji Building, 36, 100 Feet Rd, Sector 10
+            area:
+              type: string
+              example: Ashok Nagar
+            city:
+              type: string
+              example: Chennai
+            state:
+              type: string
+              example: Tamil Nadu
+            pin_code:
+              type: string
+              example: "600083"
+            latlong:
+              type: string
+              example: 13.0362588,80.2119896
+    vpa_create:
+      required:
+        - merchant_id
+        - store_id
+        - vpa_name
+        - vpa
+        - bank
+      type: object
+      properties:
+        merchant_id:
+          type: string
+          example: JNFG08NgFLKg
+        store_id:
+          type: string
+          example: JNFG08NgFLKg
+        vpa_name:
+          type: string
+          example: Wow! Momo - Ashok Nagar
+        vpa:
+          type: string
+          example: ipponinjaxxxxxxxx@icici
+        bank:
+          type: object
+          required:
+            - account_number
+            - ifsc
+            - account_holder_name
+          properties:
+            account_number:
+              type: string
+              example: "12345678909876"
+            ifsc:
+              type: string
+              example: xxxx00000001
+            account_holder_name:
+              type: string
+              example: WOW MOMO
+    vpa_update:
+      required:
+        - vpa_id
+        - store_id
+        - bank
+      type: object
+      properties:
+        vpa_id:
+          type: string
+          example: ipponinjaxxxxxxxx@icici
+        store_id:
+          type: string
+          example: sBLC9KuBvv
+        bank:
+          type: object
+          required:
+            - account_number
+            - ifsc
+            - account_holder_name
+          properties:
+            account_number:
+              type: string
+              example: "12345678909876"
+            ifsc:
+              type: string
+              example: xxxx00000001
+            account_holder_name:
+              type: string
+              example: WOW MOMO
+    store_create:
+      required:
+        - store_name
+        - mcc
+        - is_same_merchant_address
+      type: object
+      properties:
+        store_name:
+          type: string
+          example: store 1 Momo
+        location:
+          type: object
+          properties:
+            address:
+              type: string
+              example: Balaji Building, 36, 100 Feet Rd, Sector 10
+            area:
+              type: string
+              example: Ashok Nagar
+            city:
+              type: string
+              example: Chennai
+            state:
+              type: string
+              example: Tamil Nadu
+            pin_code:
+              type: string
+              example: "600083"
+            latlong:
+              type: string
+              example: 13.0362588,80.2119896
+        mcc:
+          type: string
+          example: "0824"
+        is_same_merchant_address:
+          type: boolean
+          example: "false"
+    aadhar_request_otp:
+      required:
+        - number
+        - document_type
+      type: object
+      properties:
+        number:
+          type: string
+          example: 7**********1
+        document_type:
+          type: string
+          example: aadhaar
+    otp_verification:
+      required:
+        - transaction_id
+        - otp
+        - number
+      type: object
+      properties:
+        transaction_id:
+          type: string
+          example: GDSGD762381791EDJGFKJAASD
+        otp:
+          type: string
+          example: "234434"
+        number:
+          type: string
+          example: 7**********1
+    passport:
+      required:
+        - uploadFile
+        - number
+        - document_type
+        - date_of_birth
+        - name
+      type: object
+      properties:
+        number:
+          type: string
+          example: 7**********1
+        document_type:
+          type: string
+          example: passport
+        date_of_birth:
+          type: string
+          example: YYYY-MM-DD
+        name:
+          type: string
+          example: Anna
+        uploadFile:
+          type: string
+          format: binary
+    voter_id:
+      required:
+        - uploadFile
+        - number
+        - document_type
+      type: object
+      properties:
+        number:
+          type: string
+          example: 7**********1
+        document_type:
+          type: string
+          example: voterId
+        date_of_birth:
+          type: string
+          example: YYYY-MM-DD
+        name:
+          type: string
+          example: Anna
+        uploadFile:
+          type: string
+          format: binary
+    license:
+      required:
+        - uploadFile
+        - number
+        - document_type
+        - date_of_birth
+      type: object
+      properties:
+        number:
+          type: string
+          example: 7**********1
+        document_type:
+          type: string
+          example: license
+        date_of_birth:
+          type: string
+          example: YYYY-MM-DD
+        uploadFile:
+          type: string
+          format: binary
+    pan:
+      required:
+        - uploadFile
+        - pan_number
+        - document_type
+      type: object
+      properties:
+        pan_number:
+          type: string
+          example: J********
+        document_type:
+          type: string
+          example: pan
+        uploadFile:
+          type: string
+          format: binary
+    business_proof:
+      required:
+        - uploadFile
+        - document_type
+      type: object
+      properties:
+        number:
+          type: string
+          example: 7**********1
+        document_type:
+          type: string
+          example: >-
+            Copy of LLP or Partnership Deed duly stamped and executed with
+            Certificate of Incorporation. Deed will indicate names of partners
+        uploadFile:
+          type: string
+          format: binary
+    aadhaar_details:
+      required:
+        - dataFromAadhaar
+      type: object
+      properties:
+        dataFromAadhaar:
+          type: object
+          required:
+            - dob
+            - name
+            - gender
+            - mobileHash
+            - address
+            - maskedAadhaarNumber
+          properties:
+            dob:
+              type: string
+              example: "1995-04-12"
+            name:
+              type: string
+              example: Purnendra Ahirwar
+            gender:
+              type: string
+              example: M
+            mobileHash:
+              type: string
+              example: b274432d3427b977e40deff5e6aaaf0e5c7701336d1ea0b819f9c0fc5dee26e9
+            address:
+              type: object
+            maskedAadhaarNumber:
+              type: string
+              example: XXXX XXXX 5428
