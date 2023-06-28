@@ -70,8 +70,7 @@ paths:
                       "success": true,
                       "message": "Merchant created successfully",
                       "data": {
-                          "merchant_id": "{{request.body/data/merchant_id}}",
-                          "legal_name": "{{request.body/data/legal_name}}",
+                          "merchant_id": "{{randomString(8)}}",
                           "brand_name": "{{request.body/data/brand_name}}",
                           "mobile_number": "{{request.body/data/mobile_number}}"
                         }
@@ -85,7 +84,8 @@ paths:
                   value: |
                     {
                       "success": false,
-                      "message": "Bad Request"
+                      "message": "Bad Request",
+                      "error": "Parameter legal_name is required. Check parameter constraints."
                     }
 
   /vpa/create:
@@ -147,7 +147,7 @@ paths:
                       "success": false,
                       "message": "Bad Request"
                     }
-  /vpa/update/JNFG08NgFLKg:
+  /vpa/update/{merchant_id}:
     post:
       tags:
         - VPA
@@ -184,16 +184,22 @@ paths:
                   value: |
                     {
                       "success": true,
-                      "message": "Account number updated successfully",
-                        "data": {
-                          "vpa_name": "{{request.body/vpa_name}}",
-                          "vpa": "{{request.body/vpa}}",
-                          "bank": {
-                            "account_number": "{{request.body/bank/account_number}}",
-                            "ifsc": "{{request.body/bank/ifsc}}",
-                            "beneficiary_name": "{{request.body/bank/beneficiary_name}}"
+                      "message": "VPA created successfully",
+                      {
+                          {
+                            "data": {
+                              "vpa_name": "{{request.body/data/vpa_name}}",
+                              "vpa": "{{request.body/data/vpa}}",
+                              "bank": {
+                                "account_number": "{{request.body/data/bank/account_number}}",
+                                "ifsc": "{{request.body/data/bank/ifsc}}",
+                                "beneficiary_name": "{{request.body/data/bank/beneficiary_name}}"
+                              }
+                            }
                           }
-                        }
+
+                      }
+
                     }
         "400":
           description: ""
@@ -206,7 +212,7 @@ paths:
                       "success": false,
                       "message": "Bad Request"
                     }
-  /store/create/JNFG08NgFLKg:
+  /store/create:
     post:
       tags:
         - Store
@@ -246,11 +252,10 @@ paths:
                       "success": true,
                       "message": "Store Created Successfully!",
                         "data": {
-                          "merchant_id": "{{request.body/merchant_id}}",
-                          "store_id": "{{request.body/store_id}}",
-                          "legal_name": "{{request.body/legal_name}}",
-                          "brand_name": "{{request.body/brand_name}}",
-                          "store_name": "{{request.body/store_name}}"
+                          
+                          "store_id": "{{randomString(8)}}",
+                          "brand_name": "{{request.body/data/brand_name}}",
+                          "store_name": "{{request.body/data/store_name}}"
                         }
                     }
         "400":
