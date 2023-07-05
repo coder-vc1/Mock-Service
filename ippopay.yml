@@ -5,17 +5,11 @@ info:
   description: >+
     Node 18 based Express server. Here we have handled unit tests. We have also
     implemented Commitizen, Eslint, Prettier, Husky and Mocha. 
-
      - `prettier` - For formatting the code. 
-
      - `commitizen` - For uniforming the commits. 
-
      - `eslint` - For uniforming the code style. 
-
      - `husky` - For checking the lint errors and prevent the difference in code writing style. 
-
      - `mocha`- For testing the code 
-
   contact:
     name: IppoPay
     email: support@ippopay.com
@@ -47,32 +41,43 @@ paths:
           Legal name (Legal Name of the Business or Merchant), brand name (Display
           name of the Business), merchant type, location, and mobile number are
           mandatory. Email is optional.
-        required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/merchant_create"
+              $ref: '#/components/schemas/merchant_create'
+        required: true
       x-microcks-operation:
         delay: 100
         dispatcher: SCRIPT
         dispatcherRules: |
-          return "check"
-
+          def headers = mockRequest.getRequestHeaders()
+            if (headers.hasValues("returnBadRequest")) {
+              def returnBadRequest = headers.get("returnBadRequest", "null")
+              if (returnBadRequest == "true") {
+                return "bad_request"
+              }
+            }
+            def body = new groovy.json.JsonSlurper().parseText(mockRequest.requestContent);
+            if (body.legal_name == null || body.mobile_number == null || body.brand_name == null) {
+            return "bad_request"
+            }
+            return "success"
       responses:
         "200":
           description: ""
           content:
             application/json:
               examples:
-                check:
+                success:
                   value: |
                     {
                       "success": true,
                       "message": "Merchant created successfully",
                       "data": {
                           "merchant_id": "{{randomString(8)}}",
-                          "brand_name": "{{request.body/data/brand_name}}",
-                          "mobile_number": "{{request.body/data/mobile_number}}"
+                          "brand_name": "{{request.body/brand_name}}",
+                          "legal_name": "{{request.body/legal_name}}",
+                          "mobile_number": "{{request.body/mobile_number}}"
                         }
                     }
         "400":
@@ -84,10 +89,8 @@ paths:
                   value: |
                     {
                       "success": false,
-                      "message": "Bad Request",
-                      "error": "Parameter legal_name is required. Check parameter constraints."
+                      "message": "Bad Request"
                     }
-
   /vpa/create:
     post:
       tags:
@@ -103,7 +106,18 @@ paths:
         delay: 100
         dispatcher: SCRIPT
         dispatcherRules: |
-          return "check"
+          def headers = mockRequest.getRequestHeaders()
+            if (headers.hasValues("returnBadRequest")) {
+              def returnBadRequest = headers.get("returnBadRequest", "null")
+              if (returnBadRequest == "true") {
+                return "bad_request"
+              }
+            }
+            def body = new groovy.json.JsonSlurper().parseText(mockRequest.requestContent);
+            if (body.merchant_id == null || body.store_id == null || body.vpa_name == null || body.vpa == null || body.bank == null) {
+              return "bad_request"
+            }
+            return "success"
         content:
           application/json:
             schema:
@@ -115,26 +129,22 @@ paths:
           content:
             application/json:
               examples:
-                check:
+                success:
                   value: |
                     {
                       "success": true,
                       "message": "VPA created successfully",
                       {
-                          {
-                            "data": {
-                              "brand_name": "{{request.body/data/brand_name}}",
-                              "mobile_number": "{{request.body/data/mobile_number}}",
-                              "bank": {
-                                "account_number": "{{request.body/data/bank/account_number}}",
-                                "ifsc": "{{request.body/data/bank/ifsc}}",
-                                "beneficiary_name": "{{request.body/data/bank/beneficiary_name}}"
-                              }
+                          "data": {
+                            "vpa_name": "{{request.body/vpa_name}}",
+                            "vpa": "{{request.body/vpa}}",
+                            "bank": {
+                              "account_number": "{{request.body/bank/account_number}}",
+                              "ifsc": "{{request.body/bank/ifsc}}",
+                              "beneficiary_name": "{{request.body/bank/beneficiary_name}}"
                             }
                           }
-
                       }
-
                     }
         "400":
           description: ""
@@ -184,7 +194,7 @@ paths:
                   value: |
                     {
                       "success": true,
-                      "message": "VPA created successfully",
+                      "message": "Account number updated successfully"",
                       {
                           {
                             "data": {
@@ -197,9 +207,7 @@ paths:
                               }
                             }
                           }
-
                       }
-
                     }
         "400":
           description: ""
@@ -212,7 +220,7 @@ paths:
                       "success": false,
                       "message": "Bad Request"
                     }
-  /store/create:
+  /store/create/{merchant_id}:
     post:
       tags:
         - Store
@@ -234,7 +242,18 @@ paths:
         delay: 100
         dispatcher: SCRIPT
         dispatcherRules: |
-          return "check"
+          def headers = mockRequest.getRequestHeaders()
+            if (headers.hasValues("returnBadRequest")) {
+              def returnBadRequest = headers.get("returnBadRequest", "null")
+              if (returnBadRequest == "true") {
+                return "bad_request"
+              }
+            }
+            def body = new groovy.json.JsonSlurper().parseText(mockRequest.requestContent);
+            if (body.store_name == null || body.mcc == null || body.is_same_merchant_address == null) {
+            return "bad_request"
+            }
+            return "success"
         content:
           application/json:
             schema:
@@ -246,16 +265,16 @@ paths:
           content:
             application/json:
               examples:
-                check:
+                success:
                   value: |
                     {
                       "success": true,
                       "message": "Store Created Successfully!",
                         "data": {
-                          
+                          "merchant_id": "{{request.path[3]}}",
                           "store_id": "{{randomString(8)}}",
-                          "brand_name": "{{request.body/data/brand_name}}",
-                          "store_name": "{{request.body/data/store_name}}"
+                          "brand_name": "{{request.body/brand_name}}",
+                          "store_name": "{{request.body/store_name}}"
                         }
                     }
         "400":
@@ -269,7 +288,7 @@ paths:
                       "success": false,
                       "message": "Bad Request"
                     }
-  /transaction/list/JNFG08NgFLKg:
+  /transaction/list/{merchant_id}:
     get:
       tags:
         - Transaction
@@ -402,7 +421,7 @@ paths:
                       "success": false,
                       "message": "Bad Request"
                     }
-  /transaction/details/JNFG08NgFLKg/4833812123:
+  /transaction/details/{merchant_id}/4833812123:
     get:
       tags:
         - Transaction
@@ -466,7 +485,7 @@ paths:
                       "success": false,
                       "message": "Bad Request"
                     }
-  /kyc-validate/address-proof/aadhaar/JNFG08NgFLKg:
+  /kyc-validate/address-proof/aadhaar/{merchant_id}:
     post:
       tags:
         - hidden
@@ -518,7 +537,7 @@ paths:
                       "success": false,
                       "message": "Bad Request"
                     }
-  /kyc-validate/aadhaar-otp-validate/JNFG08NgFLKg:
+  /kyc-validate/aadhaar-otp-validate/{merchant_id}:
     post:
       tags:
         - hidden
@@ -572,7 +591,7 @@ paths:
                       "success": false,
                       "message": "Bad Request"
                     }
-  /kyc-validate/address-proofs/JNFG08NgFLKg:
+  /kyc-validate/address-proofs/{merchant_id}:
     post:
       tags:
         - KYC
@@ -630,7 +649,7 @@ paths:
                       "success": false,
                       "message": "Bad Request"
                     }
-  /kyc-validate/pan/JNFG08NgFLKg:
+  /kyc-validate/pan/{merchant_id}:
     post:
       tags:
         - KYC
@@ -682,7 +701,7 @@ paths:
                       "success": false,
                       "message": "Bad Request"
                     }
-  /kyc-validate/business-proof/JNFG08NgFLKg:
+  /kyc-validate/business-proof/{merchant_id}:
     post:
       tags:
         - KYC
@@ -736,7 +755,7 @@ paths:
                       "success": false,
                       "message": "Bad Request"
                     }
-  /kyc-validate/aadhaar/JNFG08NgFLKg:
+  /kyc-validate/aadhaar/{merchant_id}:
     post:
       tags:
         - KYC
@@ -857,10 +876,10 @@ components:
       properties:
         merchant_id:
           type: string
-          example: JNFG08NgFLKg
+          example: {merchant_id}
         store_id:
           type: string
-          example: JNFG08NgFLKg
+          example: {merchant_id}
         vpa_name:
           type: string
           example: Wow! Momo - Ashok Nagar
